@@ -1,11 +1,11 @@
 {
   "name": "RewardMaster Pro",
   "short_name": "RewardMaster",
-  "start_url": "/https://kabir12331.github.io/",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#2575fc",
   "theme_color": "#2575fc",
-  "description": "Game to play on free time and to earn point in behalf of real money.",
+  "description": "Game to play in free time and earn points redeemable for real money.",
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -20,3 +20,4 @@
   ],
   "dir": "auto"
 }
+
