@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>RewardMaster Pro</title>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8920985530636956" crossorigin="anonymous"></script>
+<link rel="manifest" href="/manifest.json" />
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+:root{--accent1:#6a11cb;--accent2:#2575fc;--success:#10b981}
+*{box-sizing:border-box;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+html,body{height:100%;margin:0;background:linear-gradient(135deg,var(--accent1),var(--accent2));color:#fff;-webkit-font-smoothing:antialiased}
+.container{max-width:520px;margin:0 auto;padding:16px}
+.title{font-size:22px;font-weight:700;text-align:center;margin-top:6px}
+.subtitle{font-size:13px;color:rgba(255,255,255,0.9);text-align:center;margin-bottom:12px}
+.stats{background:rgba(255,255,255,0.12);padding:12px;border-radius:12px;margin:10px auto;width:92%}
+.stats-row{display:flex;justify-content:space-between;align-items:center}
+.points{font-weight:700;color:#ffb86b}
+.balance{font-weight:700;color:var(--success)}
+.btn{width:92%;display:block;margin:12px auto;padding:14px;border-radius:12px;border:0;font-size:16px;font-weight:700;background:#fff;color:#111}
+.btn.secondary{background:rgba(255,255,255,0.18);color:#fff;border:1px solid rgba(255,255,255,0.06)}
+.btn.small{width:44%;display:inline-block;margin:6px 3%;padding:10px}
+
+#loginPopup {position: fixed; left:0; right:0; bottom:0; background: rgba(0,0,0,0.55); padding:18px; display:block; z-index:99999;}
+.login-card{background:#fff;color:#111;padding:16px;border-radius:16px 16px 0 0;margin:0 6px}
+.google-btn{width:100%;padding:12px;background:#4285F4;color:#fff;border-radius:10px;border:0;font-weight:700}
+
+.popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;padding:16px;z-index:99999}
+.popup-card{background:#fff;color:#111;border-radius:12px;padding:14px;width:100%;max-width:420px}
+
+.wheel-area{display:flex;flex-direction:column;align-items:center}
+canvas#wheelCanvas{border-radius:50%;background:transparent;display:block}
+.wheel-arrow{font-size:28px;color:#d33;margin-top:8px}
+
+#refLink{width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;margin-top:8px}
+.note{font-size:12px;color:rgba(255,255,255,0.9);margin-top:6px;text-align:center}
+
+.fixed-bottom-ad{position:fixed;bottom:0;left:0;width:100%;text-align:center;z-index:1000;background:rgba(0,0,0,0.1);padding:4px}
+.timer{font-size:14px;color:#fff;margin-top:8px;text-align:center}
+.back-btn{display:inline-block;margin-top:10px;background:#eee;color:#111;padding:8px 12px;border-radius:8px;border:0;font-weight:700}
+@media (min-width:520px){.container{padding:20px}}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="title">💰 RewardMaster Pro</div>
+  <div class="subtitle">Login to start earning</div>
+
+  <div class="stats" id="statsCard">
+    <div class="stats-row">
+      <div><div class="small">Points</div><div class="points" id="pointsDisplay">0</div></div>
+      <div><div class="small">Balance</div><div class="balance" id="balanceDisplay">$0.00</div></div>
+    </div>
+  </div>
+
+  <button class="btn" id="btnTasks">🎯 Do Tasks</button>
+  <button class="btn secondary" id="btnWatch">🎥 Watch Video (Simulated)</button>
+
+  <div style="display:flex;justify-content:center;gap:8px;margin-top:6px">
+    <button class="btn small" id="btnSpinOpen">🎡 Spin</button>
+    <button class="btn small" id="btnDaily">☀ Daily</button>
+  </div>
+
+  <button class="btn" id="btnReferOpen">👥 Refer & Earn</button>
+  <button class="btn" id="btnWithdrawOpen" style="background:#00e676;color:#000">💳 Withdraw</button>
+
+  <div class="note">1000 points = $1 </div>
+</div>
+
+<!-- Login popup -->
+<div id="loginPopup">
+  <div class="login-card">
+    <h3 style="margin:0 0 8px 0">Welcome 👋</h3>
+    <p style="margin:0 0 12px 0">Sign in with Google to start.</p>
+    <button id="googleLoginBtn" class="google-btn">Continue with Google</button>
+  </div>
+</div>
+
+<!-- Spin popup -->
+<div id="spinPopup" class="popup-overlay">
+  <div class="popup-card">
+    <h3 style="text-align:center">Spin & Win</h3>
+    <div class="wheel-area">
+      <canvas id="wheelCanvas" width="300" height="300"></canvas>
+      <div class="wheel-arrow">▲</div>
+      <div id="spinControls" style="margin-top:12px">
+        <button class="btn" id="spinStartBtn">Spin Now</button>
+        <button class="btn secondary" id="spinCloseBtn">Close</button>
+      </div>
+      <div id="spinInfo" style="margin-top:8px;text-align:center">
+        <div class="timer" id="spinTimer" style="display:none"></div>
+        <button id="spinBackBtn" class="back-btn" style="display:none">Back</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Refer popup -->
+<div id="referPopup" class="popup-overlay">
+  <div class="popup-card">
+    <h3>Refer & Earn</h3>
+    <p>Share your link. Inviter gets bonus after friend's first verified task.</p>
+    <input id="refLink" readonly>
+    <div style="margin-top:10px">
+      <button class="btn" id="copyRefBtn">Copy Link</button>
+      <button class="btn secondary" id="referCloseBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Withdraw popup -->
+<div id="withdrawPopup" class="popup-overlay">
+  <div class="popup-card">
+    <h3>Withdraw Request</h3>
+    <input id="withdrawAccount" placeholder="PayPal / UPI ID">
+    <div style="margin-top:10px">
+      <button class="btn" id="withdrawSubmitBtn">Submit Request</button>
+      <button class="btn secondary" id="withdrawCloseBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="fixed-bottom-ad">
+  <ins class="adsbygoogle"
+       style="display:block"
+       data-ad-client="ca-pub-8920985530636956"
+       data-ad-slot="4320569713"
+       data-ad-format="auto"
+       data-full-width-responsive="true"></ins>
+</div>
+
+<audio id="spinSound" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" preload="auto"></audio>
+
+<script>
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCgf6wy0q8wEArwMQGhP0ZP_quZQ2iWXi8",
+  authDomain: "earning-app-aa8a1.firebaseapp.com",
+  projectId: "earning-app-aa8a1",
+  storageBucket: "earning-app-aa8a1.firebasestorage.app",
+  messagingSenderId: "234918908786",
+  appId: "1:234918908786:web:4c6411ff23b3af5c42c3eb"
+};
+const KIWI_WALL_ID = "jliur00oaf0sfdzgc0aee9myul1e9eg4";
+
+firebase.initializeApp(FIREBASE_CONFIG);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let currentUser = null;
+let points = 0;
+let spinsToday = 0;
+let spinsLastReset = null;
+
+const loginPopup = document.getElementById('loginPopup');
+const googleLoginBtn = document.getElementById('googleLoginBtn');
+const statsPoints = document.getElementById('pointsDisplay');
+const statsBalance = document.getElementById('balanceDisplay');
+
+const spinPopup = document.getElementById('spinPopup');
+const spinStartBtn = document.getElementById('spinStartBtn');
+const spinCloseBtn = document.getElementById('spinCloseBtn');
+const wheelCanvas = document.getElementById('wheelCanvas');
+const spinTimerEl = document.getElementById('spinTimer');
+const spinBackBtn = document.getElementById('spinBackBtn');
+const spinSound = document.getElementById('spinSound');
+
+const referPopup = document.getElementById('referPopup');
+const refLinkInput = document.getElementById('refLink');
+const copyRefBtn = document.getElementById('copyRefBtn');
+const referCloseBtn = document.getElementById('referCloseBtn');
+
+const withdrawPopup = document.getElementById('withdrawPopup');
+const withdrawSubmitBtn = document.getElementById('withdrawSubmitBtn');
+const withdrawCloseBtn = document.getElementById('withdrawCloseBtn');
+
+/* ================= Google Login ================= */
+googleLoginBtn.addEventListener('click', () => {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(err => { alert('Login failed: '+err.message); });
+});
+
+auth.onAuthStateChanged(async user => {
+  if(user){
+    currentUser = user;
+    loginPopup.style.display = 'none';
+    const uRef = db.collection('users').doc(user.uid);
+    const snap = await uRef.get();
+    if(!snap.exists){
+      await uRef.set({ email: user.email || null, points:0, spinsToday:0, spinsLastReset:firebase.firestore.FieldValue.serverTimestamp(), dailyClaimedAt:null });
+      points=0; spinsToday=0;
+    } else {
+      const d = snap.data();
+      points = d.points||0; spinsToday = d.spinsToday||0; spinsLastReset=d.spinsLastReset||null;
+    }
+    updateUI();
+    // Listen for real-time updates (KiwiWall postback + spin + watch)
+    uRef.onSnapshot(doc => { if(doc.exists){ const d=doc.data(); points=d.points||0; spinsToday=d.spinsToday||0; updateUI(); }});
+  } else { loginPopup.style.display='block'; }
+});
+
+function updateUI(){ statsPoints.textContent = points; statsBalance.textContent = (points/1000).toFixed(2); }
+
+/* ================= Tasks (KiwiWall) ================= */
+document.getElementById('btnTasks').addEventListener('click', async () => {
+  if(!currentUser) return alert('Login required');
+  // Open KiwiWall offerwall in new tab with user UID for postback
+  const kiwiUrl = `https://www.kiwiwall.com/wall/${KIWI_WALL_ID}/?sub_id=${currentUser.uid}`;
+  window.open(kiwiUrl,"_blank");
+});
+
+/* ================= Spin Wheel ================= */
+const sectors = [
+  {label:'10', value:10, color:'#ff6b6b'},
+  {label:'20', value:20, color:'#ffb86b'},
+  {label:'30', value:30, color:'#ffd166'},
+  {label:'50', value:50, color:'#8bd3dd'},
+  {label:'100', value:100, color:'#9b6cff'},
+  {label:'150', value:150, color:'#4cd137'},
+  {label:'200', value:200, color:'#00a8ff'},
+  {label:'500', value:500, color:'#f77fbe'}
+];
+const cx = wheelCanvas.width/2, cy = wheelCanvas.height/2, radius = wheelCanvas.width/2 - 4;
+function drawWheel(){
+  const ctx = wheelCanvas.getContext('2d');
+  const arc = (2*Math.PI)/sectors.length;
+  let start=-Math.PI/2;
+  for(let i=0;i<sectors.length;i++){
+    ctx.beginPath();
+    ctx.fillStyle=sectors[i].color;
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,radius,start,start+arc);
+    ctx.fill();
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.rotate(start + arc/2);
+    ctx.fillStyle="#111"; ctx.font="bold 18px sans-serif"; ctx.textAlign="right";
+    ctx.fillText(sectors[i].label,radius-10,8);
+    ctx.restore();
+    start+=arc;
+  }
+}
+drawWheel();
+
+let spinning=false;
+spinStartBtn.addEventListener('click', async ()=>{
+  if(spinning||!currentUser)return;
+  const uRef=db.collection('users').doc(currentUser.uid);
+  const snap=await uRef.get(); const data=snap.exists?snap.data():{};
+  let sToday = data.spinsToday||0;
+  const sLast = data.spinsLastReset ? (data.spinsLastReset.toDate?data.spinsLastReset.toDate():new Date(data.spinsLastReset)) : null;
+  const today=new Date();
+  if(!sLast||sLast.toDateString()!==today.toDateString()){
+    await uRef.set({spinsToday:0,spinsLastReset:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+    sToday=0;
+  }
+  if(sToday>=2){ showSpinLocked(); return; }
+
+  spinning=true;
+  const idx=Math.floor(Math.random()*sectors.length);
+  const arcDeg = 360/sectors.length;
+  const randomRot = 360*4+(idx*arcDeg)+Math.floor(Math.random()*arcDeg);
+  wheelCanvas.style.transition='transform 4s cubic-bezier(.2,.9,.2,1)';
+  wheelCanvas.style.transform=`rotate(${randomRot}deg)`;
+  spinSound.play();
+
+  setTimeout(async ()=>{
+    const deg=randomRot%360;
+    const sectorIndex=Math.floor(((360-deg)%360)/arcDeg)%sectors.length;
+    const reward=sectors[sectorIndex].value;
+    await uRef.set({ spinsToday: firebase.firestore.FieldValue.increment(1), spinsLastReset: firebase.firestore.FieldValue.serverTimestamp(), points: firebase.firestore.FieldValue.increment(reward) },{merge:true});
+    points+=reward; updateUI();
+    spinning=false;
+    wheelCanvas.style.transition='';
+    alert('You won +'+reward+' points!');
+  },4200);
+});
+
+/* Spin popup controls */
+spinCloseBtn.addEventListener('click',()=>{ spinPopup.style.display='none'; wheelCanvas.style.transform=''; stopSpinTimer(); });
+document.getElementById('btnSpinOpen').addEventListener('click', async () => {
+  if(!currentUser) return alert('Login required');
+  const uRef=db.collection('users').doc(currentUser.uid);
+  const snap=await uRef.get(); const data=snap.exists?snap.data():{};
+  const sToday = data.spinsToday||0;
+  const sLast = data.spinsLastReset ? (data.spinsLastReset.toDate?data.spinsLastReset.toDate():new Date(data.spinsLastReset)) : null;
+  spinPopup.style.display='flex';
+  if(sToday>=2 && sLast && sLast.toDateString()===new Date().toDateString()) showSpinLocked(); else hideSpinLocked();
+});
+
+/* Spin timer */
+let spinTimerInterval=null;
+function showSpinLocked(){
+  spinStartBtn.disabled=true; spinStartBtn.style.opacity=0.5;
+  spinTimerEl.style.display='block'; spinBackBtn.style.display='inline-block';
+  spinBackBtn.addEventListener('click',()=>{ spinPopup.style.display='none'; stopSpinTimer(); });
+  startSpinTimerToMidnight();
+}
+function hideSpinLocked(){ spinStartBtn.disabled=false; spinStartBtn.style.opacity=1; spinTimerEl.style.display='none'; spinBackBtn.style.display='none'; stopSpinTimer(); }
+function startSpinTimerToMidnight(){ stopSpinTimer(); updateSpinTimer(); spinTimerInterval=setInterval(updateSpinTimer,1000); }
+function stopSpinTimer(){ if(spinTimerInterval){ clearInterval(spinTimerInterval); spinTimerInterval=null; } spinTimerEl.textContent=''; }
+function updateSpinTimer(){ const now=new Date(); const tomorrow=new Date(now.getFullYear(),now.getMonth(),now.getDate()+1,0,0,0); const diff=tomorrow-now;
+if(diff<=0){ spinTimerEl.textContent='Spins reset — try again!'; stopSpinTimer(); return; }
+const hrs=Math.floor(diff/3600000); const mins=Math.floor((diff%3600000)/60000); const secs=Math.floor((diff%60000)/1000);
+spinTimerEl.textContent=`Spins used — next reset in ${hrs}h ${mins}m ${secs}s`;}
+
+/* ================= Referral ================= */
+document.getElementById('btnReferOpen').addEventListener('click',()=>{ if(!currentUser) return alert('Login required'); refLinkInput.value=`https://yourapp.com/?ref=${currentUser.uid}`; referPopup.style.display='flex'; });
+copyRefBtn.addEventListener('click',()=>{ refLinkInput.select(); document.execCommand('copy'); alert('Copied!'); });
+referCloseBtn.addEventListener('click',()=>{ referPopup.style.display='none'; });
+
+/* ================= Withdraw ================= */
+document.getElementById('btnWithdrawOpen').addEventListener('click',()=>{ if(!currentUser) return alert('Login required'); withdrawPopup.style.display='flex'; });
+withdrawCloseBtn.addEventListener('click',()=>{ withdrawPopup.style.display='none'; });
+withdrawSubmitBtn.addEventListener('click',async ()=>{
+  const account=document.getElementById('withdrawAccount').value.trim(); if(!account) return alert('Enter account');
+  const uRef=db.collection('users').doc(currentUser.uid); 
+  const snap=await uRef.get(); const bal=snap.exists?snap.data().points||0:0;
+  if(bal<1000) return alert('Need at least 1000 points ($1)'); 
+  await uRef.update({points:0}); withdrawPopup.style.display='none';
+  alert('Withdraw request submitted for '+account);
+});
+
+/* ================= Watch Video (simulated) ================= */
+document.getElementById('btnWatch').addEventListener('click', async ()=>{
+  if(!currentUser) return alert('Login required');
+  const uRef=db.collection('users').doc(currentUser.uid);
+  const reward = 25; // points for video
+  await uRef.set({points: firebase.firestore.FieldValue.increment(reward)},{merge:true});
+  alert('You earned '+reward+' points for watching!');
+});
+
+/* ================= Google AdSense init ================= */
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</body>
+</html>
