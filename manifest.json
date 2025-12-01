@@ -8,13 +8,13 @@
   "description": "Game to play in free time and earn points redeemable for real money.",
   "icons": [
     {
-      "src": "icon.jpg",
-      "sizes": "192*192",
+      "src": "android-launchericon-512-512.png",
+      "sizes": "512*512",
       "type": "image/png"
     },
     {
-      "src": "icon.jpg",
-      "sizes": "192*192",
+      "src": "android-launchericon-512-512.png",
+      "sizes": "512*512",
       "type": "image/png"
     }
   ],
