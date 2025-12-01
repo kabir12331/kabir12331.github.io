@@ -8,12 +8,12 @@
   "description": "Game to play in free time and earn points redeemable for real money.",
   "icons": [
     {
-      "src": "/icon-192.jpg",
+      "src": "icon-192.jpg",
       "sizes": "502*518",
       "type": "image/png"
     },
     {
-      "src": "/icon-512.jpg",
+      "src": "icon-512.jpg",
       "sizes": "502*518",
       "type": "image/png"
     }
